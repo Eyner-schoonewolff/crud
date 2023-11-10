@@ -1,15 +1,24 @@
 const express = require('express');
-var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-var cors = require('cors');
-
 const app = express()
 
+var bodyParser = require('body-parser')
+var cors = require('cors')
 const puerto = 3000;
 const route = require('./src/rutas/index')
-app.use(express.json());
-app.use(bodyParser.urlencoded({extended: true}));
+var logger = require("morgan");
+require('dotenv').config()
+
+
+app.use(bodyParser.json({ type: 'application/*+json' }))
+
+// parse some custom thing into a Buffer
+app.use(bodyParser.raw({ type: 'application/vnd.custom-type' }))
+
+// parse an HTML body into a string
+app.use(bodyParser.text({ type: 'text/html' }))
 app.use(cors());
+// Manejo de errores
+app.use(express.json());
 
 route(app);
 
