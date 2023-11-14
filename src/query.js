@@ -5,11 +5,17 @@ const { error } = require('console');
 
 const obtener_usuarios = () => {
     return new Promise((resolve, rejects) => {
-        const usuarios = 'SELECT * FROM usuario'
+        const usuarios = `
+        SELECT u.id, u.nombre,u.cedula, d.tipo as departamento, d.descripcion, e.tipo as estado
+        FROM usuario u
+        JOIN departamentos d on u.id_departamento = d.id
+        JOIN estado e on u.id_estado = e.id;
+      `;
         conexion.query(usuarios, (error, usuarios) => {
             if (error) {
                 rejects(error)
             } else {
+                console.log(usuarios);
                 resolve(usuarios)
             }
         });
@@ -52,7 +58,6 @@ const obtener_cedula = (cedula_usuario) => {
 
 const existe = (id_usuario) => {
     return new Promise((resolve, rejects) => {
-        console.log('ID a buscar:', id_usuario);  // Agrega este log
         const query = 'SELECT * FROM usuario WHERE id = ?';
         conexion.query(query, [id_usuario], (err, usuario) => {
             if (err) {

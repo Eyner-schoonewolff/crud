@@ -21,15 +21,15 @@ router.get('/usuarios', verificar_token, async (req, res) => {
     }
 });
 
-router.post('/crear_usuario', verificar_token, async (req, res) => {
+router.post('/crear_usuario', async (req, res) => {
     const { nombre, cedula, id_departamento } = req.body;
     const obtener_cedu = await usuarios.obtener_cedula(cedula);
     try {
         if (obtener_cedu) {
             const resultado = await usuarios.guardar_empleado(nombre, cedula, id_departamento);
-            res.json({ mensaje: 'Empleado guardado exitosamente', resultado });
+            res.json({ mensaje: 'Usuario guardado exitosamente', resultado, estado_creado: true });
         } else {
-            res.json({ mensaje: 'ya existe un usuario con esta cedula' });
+            res.json({ mensaje: 'ya existe un usuario con esta cedula', estado_creado: false });
 
         }
     } catch (error) {
@@ -39,13 +39,14 @@ router.post('/crear_usuario', verificar_token, async (req, res) => {
 
 router.put('/actualizar_usuario', verificar_token, async (req, res) => {
     const { nombre, cedula, id_departamento, id } = req.body;
+
     const usuario = await usuarios.existe(id);
     try {
         if (!usuario) {
             const resultado = await usuarios.actualizar_empleado(nombre, cedula, id_departamento, id);
-            res.json({ mensaje: 'Empleado actualizado exitosamente', resultado });
+            res.json({ mensaje: 'Empleado actualizado exitosamente', resultado,estado:true });
         } else {
-            res.status(404).json({ mensaje: 'El empleado no se encontro' })
+            res.status(200).json({ mensaje: 'El empleado no se encontro',estado:false})
         }
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al actualizar empleado', error: error.message });
@@ -55,13 +56,12 @@ router.put('/desactivar_usuario', verificar_token, async (req, res) => {
     const { estado, id } = req.body;
 
     const usuario = await usuarios.existe(id);
-    console.log(usuario)
     try {
         if (usuario) {
-            res.status(404).json({ mensaje: 'El empleado no se encontro' })
+            res.status(404).json({ mensaje: 'El empleado no se encontro', estado: false })
         } else {
             const estado_usuario = await usuarios.deshabilitar(estado, id);
-            res.json({ mensaje: 'estado actualizado', estado_usuario });
+            res.json({ mensaje: 'Tu usuario ha sido descativado.', estado_usuario, estado: true });
         }
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al actualizar empleado', error: error.message });
@@ -73,6 +73,7 @@ router.post('/login', async (req, res) => {
     const { nombre, cedula } = req.body
     const login = await usuarios.login(nombre, cedula)
     const verificar_usuario = login.usuario
+
     try {
         if (verificar_usuario) {
             const token = jwt.sign({ _id: login.id }, process.env.TOKEN_SECRET, { expiresIn: 300 });
@@ -86,9 +87,8 @@ router.post('/login', async (req, res) => {
             })
 
         } else if (!login) {
-            console.log(login)
-            res.status(404).json({
-                mensaje: {
+            res.status(200).json({
+                session: {
                     'login': login
                 }
             })
